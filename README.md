@@ -6,6 +6,7 @@
 Download the latest release and include the source path with **Project > Project options > Compiler options > Paths > Other unit files**.
 
 *NOTE: This procedure refers to Lazarus. Middleware not tested with Delphi*
+*NOTE: This middleware is tested with Horse 2.0.14 release*
 
 ## ✔️ Compatibility
 This middleware is compatible with projects developed in:

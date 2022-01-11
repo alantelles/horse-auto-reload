@@ -8,6 +8,7 @@ uses
   {$ENDIF}
   Classes,
   { you can add units after this }
+  // You will have to define Horse Framework path manually
   Horse, Horse.AutoReload;
 
 procedure HomePage(Req: THorseRequest; Res: THorseResponse; Next: TNextProc);
