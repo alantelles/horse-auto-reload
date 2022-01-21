@@ -23,7 +23,7 @@ end;
 
 begin
 
-  THorse.Use(AutoReload);
+  THorse.Use(AutoReload(9000, True)); // or False for disabling in production
 
   Thorse.Get('/', @HomePage);
 
