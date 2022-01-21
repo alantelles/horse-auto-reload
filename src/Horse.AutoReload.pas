@@ -14,13 +14,14 @@ uses
 {$ENDIF}
   Horse;
 
-function AutoReload: THorseCallback; overload;
-function AutoReload(APort: integer): THorseCallback; overload;
+
+function AutoReload(APort: integer; Active: boolean): THorseCallback;
 
 procedure Middleware(Req: THorseRequest; Res: THorseResponse; Next: {$IF DEFINED(FPC)}TNextProc{$ELSE}TProc{$ENDIF});
 procedure SendWithReloader(Res: THorseResponse; AContent: string);
 
 var
+  AutoReloadActivated: boolean;
   DetectChangeScript: string;
   LastModFile: longint = -1;
   FilesCount: longint = -1;
@@ -86,19 +87,20 @@ begin
   Res.Status(ResultStatus);
 end;
 
-function AutoReload: THorseCallback;
-begin
-  Result := AutoReload(9000);
-end;
-
-function AutoReload(APort: integer): THorseCallback;
+function AutoReload(APort: integer; Active: boolean): THorseCallback;
 var
   Fmt: string;
 begin
-  RunDetectChanges;
-  THorse.Get('/__auto-reload-detect-changes', @ReportChanges);
-  Fmt := '<script>setInterval(() =>  fetch("http://localhost:%d/__auto-reload-detect-changes").then(response => { if (response.status == 204) {console.log("Change detected. Reloading"); location.reload();} }),2000);</script>';
-  DetectChangeScript := Format(Fmt, [APort]);
+  if Active then
+  begin
+    RunDetectChanges;
+    THorse.Get('/__auto-reload-detect-changes', @ReportChanges);
+    Fmt := '<script>setInterval(() =>  fetch("http://localhost:%d/__auto-reload-detect-changes").then(response => { if (response.status == 204) {console.log("Change detected. Reloading"); location.reload();} }),2000);</script>';
+    DetectChangeScript := Format(Fmt, [APort]);
+  end
+  else
+    Writeln(#$F0, #$9F, #$98, #$B4,' Horse AutoReload: Scanning deactivated. Filesystem changes check endpoint was not registered.');
+  AutoReloadActivated := Active;
   Result := Middleware;
 end;
 
@@ -108,8 +110,13 @@ begin
 end;
 
 procedure SendWithReloader(Res: THorseResponse; AContent: string);
+var
+  StringSent: string;
 begin
-  Res.Send(AContent + DetectChangeScript);
+  StringSent := AContent;
+  if AutoReloadActivated then
+    StringSent := StringSent + DetectChangeScript;
+  Res.Send(StringSent);
 end;
 
 
